@@ -23,13 +23,13 @@
                     "четверг" => 4,
                     "пятница" => 5,
                     "суббота" => 6];
-    $commands =    ["рн" => new chat_command(".рн", "выводит расписание на день недели. Пример: .рн вторник | вторник.рн "), // расписание на 
-                    "рнc" => new chat_command(".рнс", "выводит расписание на сегодня."), // расписание на cегодня 
-                    "рнз" => new chat_command(".рнз", "выводит расписание на завтра."), // расписание на завтра
-                    "almaz" => new chat_command("алмаз", "алмаз пидор"),
-                    "change_group" => new chat_command(".сменагр", "сменить группу"),
-                    "list_commands" => new chat_command(".команды", "список команд"),
-                    "hello" => new chat_command(".привет", "выводит приветственное сообщение бота")];
+    $commands =    ["рн" => new chat_command(".рн", "выводит расписание на день недели. Пример: .рн вторник | вторник.рн | .рн вт | вт.рн", false), // расписание на 
+                    "рнc" => new chat_command(".рнс", "выводит расписание на сегодня.", false), // расписание на cегодня 
+                    "рнз" => new chat_command(".рнз", "выводит расписание на завтра.", false), // расписание на завтра
+                    "almaz" => new chat_command("алмаз", "алмаз пидор.", true),
+                    "change_group" => new chat_command(".сменагр", "сменить группу. Пример: .сменагр ис317д, .сменагр ГД228Д", false),
+                    "list_commands" => new chat_command(".команды", "список команд.", false),
+                    "hello" => new chat_command(".привет", "выводит приветственное сообщение бота.", false)];
 
     include("simple_html_dom.php");
 
@@ -94,6 +94,7 @@
                     $msg = "";
                     foreach ($commands as $c) 
                     {
+                        if ($c -> isSecret == false)
                         $msg .= $c -> command . " - " . $c -> title . "\n";
                     }
                     vk_msg_send($peer_id, $msg);
@@ -102,13 +103,17 @@
                 {
                     $start = mb_stripos($msg, $commands["change_group"] -> command);
                     $end = mb_strripos($msg, $commands["change_group"] -> command);
-                    $group = mb_strtoupper(mb_substr($msg, 8));
+                    $group = trim(mb_strtoupper(mb_substr($msg, 8)));
+                    if (empty($group) || $group == "") 
+                    {
+                        $msg = "Вы не указали группу. Используйте '" . $commands["change_group"] -> command . "' название_группы";
+                    }
                     $result = change_group($peer_id, $group);
-                    if ($result == true) $msg = "Группа успешно обновлена";
+                    if ($result == true) $msg = "Группа успешно обновлена [$group]" ;
                     else ($msg = "Не удалось обновить на $group" . mysqli_connect_error());
                     vk_msg_send($peer_id, $msg);
                 } 
-                elseif (mb_strripos($msg, $commands["hello"] -> command) !== false || $data -> object -> message -> action -> type == "chat_invite_user") 
+                elseif (mb_strripos($msg, $commands["hello"] -> command) != false || $data -> object -> message -> action -> type == "chat_invite_user") 
                 {
                     $msg = "Привет, я бот расписания ЮУГК. Для того, чтобы назначить группу, напишите: " . $commands["change_group"] .
                            "\nДля отображения всех команд используйте" . $commands["list_commands"];
@@ -290,11 +295,13 @@
     {
         public $command;
         public $title;
+        public $isSecret;
 
-        function __construct($com, $tit) 
+        function __construct($com, $tit, $isSecret) 
         {
             $this -> command = $com;
             $this -> title = $tit;
+            $this -> isSecret = $isSecret;
         }
     }
 
