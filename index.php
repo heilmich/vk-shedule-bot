@@ -55,7 +55,6 @@
                 $peer_id = $data -> object -> message -> peer_id;
                 $msg = mb_strtolower($message_text);
                 if ($dbcontext == false){
-                    vk_msg_send($peer_id, "Не получается подключиться к базе." . mysqli_connect_error());
                     return;
                 }
                 
@@ -86,7 +85,19 @@
                 } 
                 elseif ($msg === $commands["almaz"] -> command) 
                 {
-                    $msg = "пидор";
+                    $r = rand(1, 3);
+                    switch ($r)
+                    {
+                        case 1:
+                            $msg = "пидор";
+                            break;
+                        case 2:
+                            $msg = "пидорасина";
+                            break;
+                        case 3:
+                            $msg = "ебучий азиат гандон";
+                            break;
+                    }
                     vk_msg_send($peer_id, $msg);
                 } 
                 elseif ($msg === $commands["list_commands"] -> command) 
@@ -113,7 +124,7 @@
                     else ($msg = "Не удалось обновить на $group" . mysqli_connect_error());
                     vk_msg_send($peer_id, $msg);
                 } 
-                elseif (mb_strripos($msg, $commands["hello"] -> command) != false || $data -> object -> message -> action -> type == "chat_invite_user") 
+                elseif (mb_strripos($msg, $commands["hello"] -> command) !== false || $data -> object -> message -> action -> type == "chat_invite_user")
                 {
                     $msg = "Привет, я бот расписания ЮУГК. Для того, чтобы назначить группу, напишите: " . $commands["change_group"] .
                            "\nДля отображения всех команд используйте" . $commands["list_commands"];
