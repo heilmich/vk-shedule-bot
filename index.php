@@ -1,6 +1,6 @@
 <?php 
-    //error_reporting(E_ALL);
-    //ini_set('display_errors', 1);
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
     //echo get_lessons_week('[headers=четверг]');
     $weekdays =    [0 => new Week_day(0, "воскресенье", "вс", "воскресенье"),
                     1 => new Week_day(1, "понедельник", "пн", "понедельник"),
@@ -27,6 +27,7 @@
                     "рнc" => new chat_command(".рнс", "выводит расписание на сегодня.", false), // расписание на cегодня 
                     "рнз" => new chat_command(".рнз", "выводит расписание на завтра.", false), // расписание на завтра
                     "almaz" => new chat_command("алмаз", "алмаз пидор.", true),
+                    "add_almaz" => new chat_command("добавитьалмаза", "алмаз пидор.", true),
                     "change_group" => new chat_command(".сменагр", "сменить группу. Пример: .сменагр ис317д, .сменагр ГД228Д", false),
                     "list_commands" => new chat_command(".команды", "список команд.", false),
                     "hello" => new chat_command(".привет", "выводит приветственное сообщение бота.", false)];
@@ -86,20 +87,18 @@
                 elseif ($msg === $commands["almaz"] -> command) 
                 {
                     $r = rand(1, 3);
-                    switch ($r)
-                    {
-                        case 1:
-                            $msg = "пидор";
-                            break;
-                        case 2:
-                            $msg = "пидорасина";
-                            break;
-                        case 3:
-                            $msg = "ебучий азиат гандон";
-                            break;
-                    }
+                    $msg = get_almaz_words($peer_id);
                     vk_msg_send($peer_id, $msg);
                 } 
+                elseif (mb_strripos($msg, $commands["add_almaz"] -> command) !== false) 
+                {
+                    $end = mb_stripos($msg, $commands["add_almaz"] -> command);
+                    $word = trim(mb_substr($msg, 14));
+                    $result = add_almaz_word($peer_id, $word);
+                    if ($result == false) $msg = "Не удалось добавить $word";
+                    else $msg = "Фраза успешно добавлена [$word]";
+                    vk_msg_send($peer_id, $msg);
+                }
                 elseif ($msg === $commands["list_commands"] -> command) 
                 {
                     $msg = "";
@@ -218,6 +217,25 @@
         }
         
         return (string)$str;
+    }
+
+    function add_almaz_word($peer_id, $word) 
+    {
+        global $dbcontext;
+        $sqlins = "INSERT INTO AlmazWords SET peer_id = '$peer_id', word = '$word'";
+        $result = mysqli_query($dbcontext, $sqlins);
+        if ($result == false) 
+            {
+                return false;
+            }
+        return true;
+    }
+
+    function get_almaz_words($peer_id) 
+    {
+        global $dbcontext;
+        $result = mysqli_fetch_object(mysqli_query($dbcontext, "SELECT * FROM AlmazWords WHERE peer_id = '$peer_id' ORDER BY RAND() LIMIT 1"));
+        return $result -> word;
     }
 
     function find_day($str) 
