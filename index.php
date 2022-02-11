@@ -170,14 +170,16 @@
         file_get_contents('https://api.vk.com/method/messages.send?' . $get_params);
     }
 
+    //получает расписание из parse_day и группирует его в строку
     function get_lessons_week($dayid, $peer_id) 
     {
         global $weekdays, $week_days, $dbcontext;
 
         $group = mysqli_fetch_object(mysqli_query($dbcontext, "SELECT * FROM Conversation WHERE peer_id = '$peer_id'"));
 
-        $d = $weekdays[$dayid + 1] -> name;
-        $ls = parse_day(get_group_shedule($group -> title), "$d");
+        $day = $weekdays[$dayid + 1] -> name;
+        $href = get_group_shedule($group -> title);
+        $ls = parse_day($href, "$day");
 
         if ($ls == false) return "Занятий не найдено";
 
@@ -193,7 +195,7 @@
         return $msg;
     }
 
-
+    // заходит на общую страницу расписаний, ищет название str_group в элементах "a" и переходит по ссылке
     function get_group_shedule($str_group)
     {
         $ch = curl_init();
@@ -219,6 +221,7 @@
         return (string)$str;
     }
 
+
     function add_almaz_word($peer_id, $word) 
     {
         global $dbcontext;
@@ -234,11 +237,15 @@
     function get_almaz_words($peer_id) 
     {
         global $dbcontext;
+
+        //возвращает одно слово
         $result = mysqli_fetch_object(mysqli_query($dbcontext, "SELECT * FROM AlmazWords WHERE peer_id = '$peer_id' ORDER BY RAND() LIMIT 1"));
+        
         return $result -> word;
     }
 
-    function find_day($str) 
+    //ищет день в коллекции дней weekdays
+    function find_day($str)  
     {
         global $weekdays, $week_days, $week_id;
 
@@ -259,8 +266,10 @@
         return mb_substr($str, $start, $end - $start);
     }
     
+    // собираеn данные со страницы расписания группы
     function parse_day($href, $day) 
     {
+        
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $href);
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36');
