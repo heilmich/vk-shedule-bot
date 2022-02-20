@@ -1,21 +1,32 @@
 <?php 
-    error_reporting(E_ALL);
-    ini_set('display_errors', 1);
-    //echo get_lessons_week('[headers=четверг]');
-    $weekdays =    [0 => new Week_day(0, "воскресенье", "вс", "воскресенье"),
-                    1 => new Week_day(1, "понедельник", "пн", "понедельник"),
-                    2 => new Week_day(2, "вторник", "вт", "вторник"),
-                    3 => new Week_day(3, "среда", "ср", "среду"),
-                    4 => new Week_day(4, "четверг", "чт", "четверг"),
-                    5 => new Week_day(5, "пятница", "пт", "пятницу"),
-                    6 => new Week_day(6, "суббота", "сб", "субботу")];
-    $week_days =   [0 => "воскресенье", 
+    //error_reporting(E_ALL);
+    //ini_set('display_errors', 1);
+
+    include("simple_html_dom.php");
+
+    $dbcontext = mysqli_connect("localhost","a0631012_vkbot", "njnjhj", "a0631012_vkbot");
+    mysqli_set_charset($dbcontext, "utf8");
+
+    CONST TOKEN = '448d1a3d7c3e178da40642eed7e3de62aab37f9c03a829b4f7f2811fad6e3425b0a912f52e88111381599';
+    CONST CONF_TOKEN = '645f59f9';
+    CONST SECRET_KEY = "secrt";
+    
+    $weekdays =    [0 => new WeekDay(0, "воскресенье", "вс", "воскресенье"),
+                    1 => new WeekDay(1, "понедельник", "пн", "понедельник"),
+                    2 => new WeekDay(2, "вторник", "вт", "вторник"),
+                    3 => new WeekDay(3, "среда", "ср", "среду"),
+                    4 => new WeekDay(4, "четверг", "чт", "четверг"),
+                    5 => new WeekDay(5, "пятница", "пт", "пятницу"),
+                    6 => new WeekDay(6, "суббота", "сб", "субботу")];
+
+    $WeekDays =   [0 => "воскресенье", 
                     1 => "понедельник",
                     2 => "вторник",
                     3 => "среда",
                     4 => "четверг",
                     5 => "пятница",
                     6 => "суббота"];
+
     $week_id =     ["воскресенье" => 0, 
                     "понедельник" => 1,
                     "вторник" => 2,
@@ -23,23 +34,19 @@
                     "четверг" => 4,
                     "пятница" => 5,
                     "суббота" => 6];
-    $commands =    ["рн" => new chat_command(".рн", "выводит расписание на день недели. Пример: .рн вторник | вторник.рн | .рн вт | вт.рн", false), // расписание на 
-                    "рнc" => new chat_command(".рнс", "выводит расписание на сегодня.", false), // расписание на cегодня 
-                    "рнз" => new chat_command(".рнз", "выводит расписание на завтра.", false), // расписание на завтра
-                    "almaz" => new chat_command("алмаз", "алмаз пидор.", true),
-                    "add_almaz" => new chat_command("добавитьалмаза", "алмаз пидор.", true),
-                    "change_group" => new chat_command(".сменагр", "сменить группу. Пример: .сменагр ис317д, .сменагр ГД228Д", false),
-                    "list_commands" => new chat_command(".команды", "список команд.", false),
-                    "hello" => new chat_command(".привет", "выводит приветственное сообщение бота.", false)];
 
-    include("simple_html_dom.php");
+    $commands =    ["рн" => new ChatCommand(".рн", "выводит расписание на день недели. Пример: .рн вторник | вторник.рн | .рн вт | вт.рн", false), // расписание на 
+                    "рнc" => new ChatCommand(".рнс", "выводит расписание на сегодня.", false), // расписание на cегодня 
+                    "рнз" => new ChatCommand(".рнз", "выводит расписание на завтра.", false), // расписание на завтра
+                    "almaz" => new ChatCommand("алмаз", "алмаз пидор.", true),
+                    "add_almaz" => new ChatCommand("добавитьалмаза", "алмаз пидор.", true),
+                    "change_group" => new ChatCommand(".сменагр", "сменить группу. Пример: .сменагр ис317д, .сменагр ГД228Д", false),
+                    "list_commands" => new ChatCommand(".команды", "список команд.", false),
+                    "hello" => new ChatCommand(".привет", "выводит приветственное сообщение бота.", false)];
 
-    $msglog = "";
-    $dbcontext = mysqli_connect("localhost","a0631012_vkbot", "njnjhj", "a0631012_vkbot");
-    mysqli_set_charset($dbcontext, "utf8");
-    CONST TOKEN = '448d1a3d7c3e178da40642eed7e3de62aab37f9c03a829b4f7f2811fad6e3425b0a912f52e88111381599';
-    CONST CONF_TOKEN = '645f59f9';
-    CONST SECRET_KEY = "secrt";
+
+
+    
     $data = json_decode(file_get_contents('php://input'));
     
     if ($data -> secret == SECRET_KEY) 
@@ -55,9 +62,9 @@
                 $message_text = $data -> object -> message -> text;
                 $peer_id = $data -> object -> message -> peer_id;
                 $msg = mb_strtolower($message_text);
-                if ($dbcontext == false){
+
+                if ($dbcontext == false) 
                     return;
-                }
                 
                 if (mb_strripos($msg, $commands["рнз"] -> command) !== false)
                 {
@@ -65,40 +72,44 @@
                     if (empty($msg)) $msg = "Не получилось получить расписание";
                     vk_msg_send($peer_id, $msg);
                 } 
+
                 elseif (mb_strripos($msg, $commands["рнc"] -> command) !== false) 
                 {
                     $msg = get_lessons_week(date('w'), $peer_id);
                     if (empty($msg)) $msg = "Не получилось получить расписание";
                     vk_msg_send($peer_id, $msg);
                 } 
+
                 elseif (mb_strripos($msg, $commands["рн"] -> command) !== false) 
                 {
-                    $id = find_day($msg);
+                    $id = ($msg);
                     if ($id == null) 
                     {
                         vk_msg_send($peer_id, "День недели не найден. Возможно, вы неправильно его указали.");
                         header("HTTP/1.1 200 OK");
-                        sendOK();
+                        send_ok();
                         return;
                     }
                     $msg = get_lessons_week($id, $peer_id);
                     vk_msg_send($peer_id, $msg);
                 } 
+
                 elseif ($msg === $commands["almaz"] -> command) 
                 {
                     $r = rand(1, 3);
                     $msg = get_almaz_words($peer_id);
                     vk_msg_send($peer_id, $msg);
                 } 
+
                 elseif (mb_strripos($msg, $commands["add_almaz"] -> command) !== false) 
                 {
-                    $end = mb_stripos($msg, $commands["add_almaz"] -> command);
                     $word = trim(mb_substr($msg, 14));
                     $result = add_almaz_word($peer_id, $word);
                     if ($result == false) $msg = "Не удалось добавить $word";
                     else $msg = "Фраза успешно добавлена [$word]";
                     vk_msg_send($peer_id, $msg);
                 }
+
                 elseif ($msg === $commands["list_commands"] -> command) 
                 {
                     $msg = "";
@@ -109,10 +120,11 @@
                     }
                     vk_msg_send($peer_id, $msg);
                 } 
+
                 elseif (mb_strripos($msg, $commands["change_group"] -> command) !== false)
                 {
-                    $start = mb_stripos($msg, $commands["change_group"] -> command);
-                    $end = mb_strripos($msg, $commands["change_group"] -> command);
+                    //$start = mb_stripos($msg, $commands["change_group"] -> command);
+                    //$end = mb_strripos($msg, $commands["change_group"] -> command);
                     $group = trim(mb_strtoupper(mb_substr($msg, 8)));
                     if (empty($group) || $group == "") 
                     {
@@ -123,6 +135,7 @@
                     else ($msg = "Не удалось обновить на $group" . mysqli_connect_error());
                     vk_msg_send($peer_id, $msg);
                 } 
+
                 elseif (mb_strripos($msg, $commands["hello"] -> command) !== false || $data -> object -> message -> action -> type == "chat_invite_user")
                 {
                     $msg = "Привет, я бот расписания ЮУГК. Для того, чтобы назначить группу, напишите: " . $commands["change_group"] .
@@ -130,17 +143,17 @@
                 }
 
                 header("HTTP/1.1 200 OK");
-                sendOK();
+                send_ok();
             break;
 
             default:
                 header("HTTP/1.1 200 OK");
-                sendOK();
+                send_ok();
             break;
         }
     }
     
-    function sendOK() {
+    function send_ok() {
         set_time_limit(0);
         ini_set('display_errors', 'Off');
     
@@ -170,12 +183,19 @@
         file_get_contents('https://api.vk.com/method/messages.send?' . $get_params);
     }
 
+    function db_query($query) 
+    {
+        global $dbcontext;
+        $result = mysqli_query($dbcontext, $query);
+        return $result;
+    }
+
     //получает расписание из parse_day и группирует его в строку
     function get_lessons_week($dayid, $peer_id) 
     {
-        global $weekdays, $week_days, $dbcontext;
+        global $weekdays;
 
-        $group = mysqli_fetch_object(mysqli_query($dbcontext, "SELECT * FROM Conversation WHERE peer_id = '$peer_id'"));
+        $group = mysqli_fetch_object(db_query("SELECT * FROM Conversation WHERE peer_id = '$peer_id'"));
 
         $day = $weekdays[$dayid + 1] -> name;
         $href = get_group_shedule($group -> title);
@@ -224,30 +244,31 @@
 
     function add_almaz_word($peer_id, $word) 
     {
-        global $dbcontext;
-        $sqlins = "INSERT INTO AlmazWords SET peer_id = '$peer_id', word = '$word'";
-        $result = mysqli_query($dbcontext, $sqlins);
+        $query = "INSERT INTO AlmazWords SET peer_id = '$peer_id', word = '$word'";
+        $result = db_query($query);
+
         if ($result == false) 
-            {
-                return false;
-            }
+            return false;
+
         return true;
     }
 
     function get_almaz_words($peer_id) 
     {
-        global $dbcontext;
+        //возвращает одно случайное слово
+        $query = "SELECT * FROM AlmazWords WHERE peer_id = '$peer_id' ORDER BY RAND() LIMIT 1";
+        $result = mysqli_fetch_object(db_query($query));
 
-        //возвращает одно слово
-        $result = mysqli_fetch_object(mysqli_query($dbcontext, "SELECT * FROM AlmazWords WHERE peer_id = '$peer_id' ORDER BY RAND() LIMIT 1"));
-        
+        if ($result == false) 
+            return false;
+
         return $result -> word;
     }
 
     //ищет день в коллекции дней weekdays
     function find_day($str)  
     {
-        global $weekdays, $week_days, $week_id;
+        global $weekdays;
 
         foreach($weekdays as $d) 
         {
@@ -282,11 +303,6 @@
         $html -> load($out);
         $collection = $html -> find("[headers=$day] .timetable-lesson");
         
-        
-        //$collection = $col -> find('');
-        //$inhtml = new DOMDocument();
-
-        $str = "";
         $lessons[] = new Lesson;
 
         foreach($collection as $colitem) 
@@ -297,8 +313,6 @@
             $l -> title = $title;
             $l -> time = $time;
             $lessons[] = $l;
-            
-            //$inhtml -> appendChild($inhtml -> importNode($colitem, true));
         }
         if ($lessons == null) return false;
 
@@ -307,12 +321,11 @@
 
     function change_group($peer_id, $strgroup) 
     {
-        global $dbcontext;
         $strgroup = trim($strgroup, " ");
-        if (mysqli_fetch_row(mysqli_query($dbcontext, "SELECT EXISTS(SELECT id FROM Conversation WHERE peer_id = '$peer_id')"))[0] > 0)
+        if (mysqli_fetch_row(db_query("SELECT EXISTS(SELECT id FROM Conversation WHERE peer_id = '$peer_id')"))[0] > 0)
         {
             $sqlupd = "UPDATE Conversation SET peer_id = '$peer_id', title = '$strgroup' WHERE peer_id = '$peer_id'";
-            $result = mysqli_query($dbcontext, $sqlupd);
+            $result = db_query($sqlupd);
             if ($result == false) 
             {
                 return false;
@@ -320,7 +333,7 @@
         }
         else {
             $sqlins = "INSERT INTO Conversation SET peer_id = '$peer_id', title = '$strgroup'";
-            $result = mysqli_query($dbcontext, $sqlins);
+            $result = db_query($sqlins);
             if ($result == false) 
             {
                 return false;
@@ -329,7 +342,7 @@
         return true;
     }
 
-    class chat_command 
+    class ChatCommand 
     {
         public $command;
         public $title;
@@ -343,7 +356,7 @@
         }
     }
 
-    class Week_day 
+    class WeekDay 
     {
         public $id;
         public $name; // название дня недели
