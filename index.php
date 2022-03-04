@@ -1,10 +1,10 @@
 <?php 
-    //error_reporting(E_ALL);
-    //ini_set('display_errors', 1);
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
 
     include("simple_html_dom.php");
 
-    $dbcontext = mysqli_connect("localhost","a0631012_vkbot", "njnjhj", "a0631012_vkbot");
+    $dbcontext = mysqli_connect("localhost","user1290_wp", "WP1290USER@", "user1290_vkbot");
     mysqli_set_charset($dbcontext, "utf8");
 
     CONST TOKEN = '448d1a3d7c3e178da40642eed7e3de62aab37f9c03a829b4f7f2811fad6e3425b0a912f52e88111381599';
@@ -46,7 +46,6 @@
 
 
 
-    
     $data = json_decode(file_get_contents('php://input'));
     
     if ($data -> secret == SECRET_KEY) 
@@ -58,7 +57,7 @@
             break;
 
             case 'message_new': 
-                
+                send_ok();
                 $message_text = $data -> object -> message -> text;
                 $peer_id = $data -> object -> message -> peer_id;
                 $msg = mb_strtolower($message_text);
@@ -141,13 +140,9 @@
                     $msg = "Привет, я бот расписания ЮУГК. Для того, чтобы назначить группу, напишите: " . $commands["change_group"] .
                            "\nДля отображения всех команд используйте" . $commands["list_commands"];
                 }
-
-                header("HTTP/1.1 200 OK");
-                send_ok();
             break;
 
             default:
-                header("HTTP/1.1 200 OK");
                 send_ok();
             break;
         }
@@ -161,6 +156,7 @@
         ignore_user_abort(true);
     
         ob_start();
+        header("HTTP/1.1 200 OK");
         header('Content-Encoding: none');
         header('Content-Length: 2');
         header('Connection: close');
@@ -215,7 +211,7 @@
         return $msg;
     }
 
-    // заходит на общую страницу расписаний, ищет название str_group в элементах "a" и переходит по ссылке
+    // заходит на общую страницу расписаний, ищет название str_group в DOM, теге "a", и возвращает ссылку как строку
     function get_group_shedule($str_group)
     {
         $ch = curl_init();
