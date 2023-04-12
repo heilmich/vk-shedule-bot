@@ -2,13 +2,11 @@
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
 
-    include("simple_html_dom.php");
-
     $dbcontext = mysqli_connect("localhost","bitrix0", "O?EVX}v9oS8P!YIs219n", "sitemanager");
     mysqli_set_charset($dbcontext, "utf8");
 
     CONST TOKEN = '448d1a3d7c3e178da40642eed7e3de62aab37f9c03a829b4f7f2811fad6e3425b0a912f52e88111381599';
-    CONST CONF_TOKEN = '645f59f9';
+    CONST CONF_TOKEN = 'c613ccc5';
     CONST SECRET_KEY = "secrt";
 
     $data = json_decode(file_get_contents('php://input'));
