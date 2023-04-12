@@ -17,6 +17,7 @@
                     "list_commands" => new ChatCommand(".команды", "список команд.", false),
                     "hello" => new ChatCommand(".привет", "выводит приветственное сообщение бота.", false)];
 
+    initialize_tables();
     
     if ($data -> secret == SECRET_KEY) 
     {
@@ -37,14 +38,13 @@
             
                 if (trim($msg) === $commands["almaz"] -> command) 
                 {
-                    $r = rand(1, 3);
                     $msg = get_almaz_words($peer_id);
                     vk_msg_send($peer_id, $msg);
                 } 
 
                 elseif (mb_strripos($msg, $commands["add_almaz"] -> command) !== false) 
                 {
-                    $word = trim(mb_substr($msg, count($commands['add_almaz'] -> command)));
+                    $word = trim(str_replace($commands["add_almaz"] -> command, '', $msg));
                     $result = add_almaz_word($peer_id, $word);
                     if ($result == false) $msg = "Не удалось добавить $word";
                     else $msg = "Фраза успешно добавлена [$word]";
@@ -62,7 +62,7 @@
                     vk_msg_send($peer_id, $msg);
                 } 
 
-                elseif (mb_strripos($msg, $commands["hello"] -> command) !== false || $data -> object -> message -> action -> type == "chat_invite_user")
+                elseif (trim($msg) === $commands["hello"] -> command || $data -> object -> message -> action -> type == "chat_invite_user")
                 {
                     $msg = "Привет, я алмазный бот. Восстал из ада, чтобы послать алмаза нахуй." .
                            "\nДля отображения всех команд используйте" . $commands["list_commands"];
